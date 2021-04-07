@@ -1,3 +1,4 @@
+  
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -25,16 +26,18 @@ void wait_for_vsync();
 void plot_pixel(int x, int y, short int line_color); 
 void readKeyboard(unsigned char *clickedKey);
 void redrawPlayer(playerBall *ball, unsigned char var);
+	
+playerBall pBall = {160,120,15, 0,0};
+	playerBall previousBall =  {160,120,15, 0,0};
 
 int main(void) {
     volatile int * pixel_ctrl_ptr = (int *)0xFF203020;
 	pixel_buffer_start = *pixel_ctrl_ptr;
 	
-	playerBall pBall = {160,120,10, 0,0};
-	
+
 	 /* set front pixel buffer to start of FPGA On-chip memory */
-    *(pixel_ctrl_ptr + 1) = 0xC0000000;
-    /* now, swap the front/back buffers, to set the front buffer location */
+   // *(pixel_ctrl_ptr + 1) = 0xC0000000;
+    /* now, swap the front/back buffers, to set the front buffer location 
     wait_for_vsync();
 
     pixel_buffer_start = *pixel_ctrl_ptr;
@@ -43,19 +46,22 @@ int main(void) {
 	
     *(pixel_ctrl_ptr + 1) = 0xC8000000;
     pixel_buffer_start = *(pixel_ctrl_ptr + 1); // we draw on the back buffer
-	
+	*/
 	unsigned char clickedKey = 0; 
-	
-	//drawBall (&pBall,0x07E0); 
+	clear_screen();
+	drawBall (&pBall,0x07E0); 
 	while(true){
 		
+		wait_for_vsync();
+		drawBall(&previousBall,0xFFFF);
 		readKeyboard(&clickedKey);
+		
 		redrawPlayer(&pBall, clickedKey);
 		drawBall(&pBall,0x07E0);
 		
 			
 	}
-    return 0;
+	while(1){}
 }
 void drawBall(const playerBall *ball, short int color) {
 	for (int i = ball->x - ball->radius; i < ball->x + ball->radius; i++) {
@@ -75,14 +81,14 @@ void wait_for_vsync(){
 	} while ((status & 0x01) != 0); // wait for s to become 0
 }
 
-//clears screen (same as part 1)
 void clear_screen(){
     for (int x = 0; x < 320; x++) {
         for (int y = 0; y < 240; y++) {
-            plot_pixel(x, y, 0x0000);
+            plot_pixel(x, y, 0xFFFF);
         }
     }
 }
+
 void plot_pixel(int x, int y, short int line_color){
     *(short int *)(pixel_buffer_start + (y << 10) + (x << 1)) = line_color;
 }
@@ -99,9 +105,9 @@ void readKeyboard(unsigned char *clickedKey){
 }
 void redrawPlayer(playerBall *ball, unsigned char var){
 	//for arrow key inputs 
-	if (var == 0x75)
+	if (var == 0x72)
 		ball->dy = 3; 
-	else if (var == 0x72)
+	else if (var == 0x75)
 		ball->dy = -3;
 	else if (var == 0x74)
 		ball->dx = 3;
@@ -122,4 +128,5 @@ void redrawPlayer(playerBall *ball, unsigned char var){
 	if (ball->y - ball->radius < 0 || ball->y + ball->radius > 240) {
 		ball->y = ball->y - ball->dy;
 		ball->dy = 0;}
+	previousBall = *ball;
 }
