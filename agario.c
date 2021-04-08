@@ -1,5 +1,4 @@
-  
-#include <stdlib.h>
+  #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 	
@@ -12,6 +11,14 @@ typedef struct playerBall{
 	int dx;
 	int dy; 
 }playerBall; 
+
+typedef struct randomBall{
+	int x;
+	int y; 
+	int radius;
+	int dx;
+	int dy; 
+}randomBall;
 
 enum gameStatus{
 	menu,
@@ -26,34 +33,42 @@ void wait_for_vsync();
 void plot_pixel(int x, int y, short int line_color); 
 void readKeyboard(unsigned char *clickedKey);
 void redrawPlayer(playerBall *ball, unsigned char var);
-	void draw_string(int x, int y, char str[]);
+void draw_string(int x, int y, char str[]);
 void clear_text();
-playerBall pBall = {160,120,15, 0,0};
-	playerBall previousBall =  {160,120,15, 0,0};
+void drawRandomBall(const randomBall *ball, short int color); 
+int generateRandomNum(int lower, int upper);
+void redrawRandomBall(randomBall *ball);
 
+playerBall pBall = {160,120,15, 0,0};
+playerBall previousBall =  {160,120,15, 0,0};
+randomBall rBall = {0,0,0,0,0};
+randomBall previousRandomBall = {0,0,0,0,0};
+	
 int main(void) {
+	
     volatile int * pixel_ctrl_ptr = (int *)0xFF203020;
 	pixel_buffer_start = *pixel_ctrl_ptr;
 	
-
+	int count = 0;
+	
 	 /* set front pixel buffer to start of FPGA On-chip memory */
    // *(pixel_ctrl_ptr + 1) = 0xC0000000;
     /* now, swap the front/back buffers, to set the front buffer location 
     wait_for_vsync();
-
     pixel_buffer_start = *pixel_ctrl_ptr;
 	//clear_screen();
 	//drawBall (&pBall,0x07E0);
 	
     *(pixel_ctrl_ptr + 1) = 0xC8000000;
-    pixel_buffer_start = *(pixel_ctrl_ptr + 1); // we draw on the back buffer
-	*/
+    pixel_buffer_start = *(pixel_ctrl_ptr + 1); // we draw on the back buffer*/
+	
 	unsigned char clickedKey = 0; 
 	clear_screen();
 	clear_text();
 	drawBall (&pBall,0x07E0); 
 	status = menu;
 	draw_string(30, 40, "press space to start");
+	
 	while(true){
 		if (status == menu){
 			readKeyboard(&clickedKey);
@@ -66,15 +81,40 @@ int main(void) {
 		}else if (status == game){
 		wait_for_vsync();
 		drawBall(&previousBall,0x0000);
+			
+		if (count < 10){
+			rBall.x = generateRandomNum(10,310);
+			rBall.y = generateRandomNum(10,230);
+			rBall.radius = generateRandomNum(5,15);
+			rBall.dx = generateRandomNum(1,6);
+			rBall.dy = generateRandomNum(1,6);
+			drawRandomBall(&rBall,0x001F);
+			count += 1;
+		}
 		readKeyboard(&clickedKey);	
 		redrawPlayer(&pBall, clickedKey);
+		//redrawRandomBall(&rBall);
 		drawBall(&pBall,0x07E0);
+		//drawRandomBall(&rBall,0x001F);
 		}
 			
 	}
 }
 
-void drawBall(const playerBall *ball, short int color) {
+int generateRandomNum(int lower, int upper){
+	int num = (rand() % (upper - lower + 1)) + lower;
+	return num; 
+}
+	
+void drawBall(const playerBall *ball, short int color){
+	for (int i = ball->x - ball->radius; i < ball->x + ball->radius; i++) {
+		for (int j = ball->y - ball->radius; j < ball->y + ball->radius; j++) {
+			plot_pixel(i, j, color);
+		}
+	}
+}
+
+void drawRandomBall(const randomBall *ball, short int color){
 	for (int i = ball->x - ball->radius; i < ball->x + ball->radius; i++) {
 		for (int j = ball->y - ball->radius; j < ball->y + ball->radius; j++) {
 			plot_pixel(i, j, color);
@@ -104,6 +144,7 @@ void clear_screen(){
 void plot_pixel(int x, int y, short int line_color){
     *(short int *)(pixel_buffer_start + (y << 10) + (x << 1)) = line_color;
 }
+
 
 void readKeyboard(unsigned char *clickedKey){
 	int dataVar; 
@@ -141,6 +182,18 @@ void redrawPlayer(playerBall *ball, unsigned char var){
 		ball->y = ball->y - ball->dy;
 		ball->dy = 0;}
 	previousBall = *ball;
+}
+void redrawRandomBall(randomBall *ball){
+	(ball->y) += (ball->dy); 
+	(ball->x) += (ball->dx);
+	//border cases for x
+	if (ball->x - ball->radius < 0 || ball->x + ball->radius > 320) {
+		ball->x = ball->x - ball->dx;
+		ball->dx = 0;}
+	//border cases for y 
+	if (ball->y - ball->radius < 0 || ball->y + ball->radius > 240) {
+		ball->y = ball->y - ball->dy;
+		ball->dy = 0;}
 }
 
 void draw_string(int x, int y, char str[]) {
