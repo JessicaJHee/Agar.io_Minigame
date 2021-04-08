@@ -13,12 +13,12 @@ typedef struct playerBall{
 	int dy; 
 }playerBall; 
 
-/*typdef enum{
+enum gameStatus{
 	menu,
-	game,
-}states; */
+	game
+}; 
 
-//states gamestates; 
+enum gameStatus status; 
 
 void clear_screen();
 void drawBall(const playerBall *ball, short int color); 
@@ -26,7 +26,8 @@ void wait_for_vsync();
 void plot_pixel(int x, int y, short int line_color); 
 void readKeyboard(unsigned char *clickedKey);
 void redrawPlayer(playerBall *ball, unsigned char var);
-	
+	void draw_string(int x, int y, char str[]);
+void clear_text();
 playerBall pBall = {160,120,15, 0,0};
 	playerBall previousBall =  {160,120,15, 0,0};
 
@@ -49,20 +50,30 @@ int main(void) {
 	*/
 	unsigned char clickedKey = 0; 
 	clear_screen();
+	clear_text();
 	drawBall (&pBall,0x07E0); 
+	status = menu;
+	draw_string(30, 40, "press space to start");
 	while(true){
-		
+		if (status == menu){
+			readKeyboard(&clickedKey);
+				if (clickedKey == 0x29) {
+					clear_screen();
+					clear_text();
+					status = game;
+				}
+				
+		}else if (status == game){
 		wait_for_vsync();
-		drawBall(&previousBall,0xFFFF);
-		readKeyboard(&clickedKey);
-		
+		drawBall(&previousBall,0x0000);
+		readKeyboard(&clickedKey);	
 		redrawPlayer(&pBall, clickedKey);
 		drawBall(&pBall,0x07E0);
-		
+		}
 			
 	}
-	while(1){}
 }
+
 void drawBall(const playerBall *ball, short int color) {
 	for (int i = ball->x - ball->radius; i < ball->x + ball->radius; i++) {
 		for (int j = ball->y - ball->radius; j < ball->y + ball->radius; j++) {
@@ -70,6 +81,7 @@ void drawBall(const playerBall *ball, short int color) {
 		}
 	}
 }
+
 void wait_for_vsync(){
 	volatile int *pixel_ctrl_ptr = (int*)0xFF203020; // pixel controller
 	register int status;
@@ -84,7 +96,7 @@ void wait_for_vsync(){
 void clear_screen(){
     for (int x = 0; x < 320; x++) {
         for (int y = 0; y < 240; y++) {
-            plot_pixel(x, y, 0xFFFF);
+            plot_pixel(x, y, 0x0000);
         }
     }
 }
@@ -129,4 +141,20 @@ void redrawPlayer(playerBall *ball, unsigned char var){
 		ball->y = ball->y - ball->dy;
 		ball->dy = 0;}
 	previousBall = *ball;
+}
+
+void draw_string(int x, int y, char str[]) {
+	for (int i = 0; i < strlen(str); i++) {
+			volatile int charBuffer = 0xc9000000;
+	*(char *)(charBuffer + (y << 7) + x+i) = str[i];
+	}
+}
+
+void clear_text() {
+	for (int x = 0; x < 80; x++) {
+		for (int y = 0; y < 60; y++) {
+			volatile int charBuffer = 0xc9000000;
+	*(char *)(charBuffer + (y << 7) + x) = ' ';
+		}
+	}
 }
