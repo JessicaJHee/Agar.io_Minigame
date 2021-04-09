@@ -4,21 +4,14 @@
 	
 volatile int pixel_buffer_start; // global variable 
 
-typedef struct playerBall{
+typedef struct Ball{
 	int x;
 	int y; 
 	int radius; 
 	int dx;
 	int dy; 
-}playerBall; 
-
-typedef struct randomBall{
-	int x;
-	int y; 
-	int radius;
-	int dx;
-	int dy; 
-}randomBall;
+	short color;
+}Ball; 
 
 enum gameStatus{
 	menu,
@@ -28,21 +21,21 @@ enum gameStatus{
 enum gameStatus status; 
 
 void clear_screen();
-void drawBall(const playerBall *ball, short int color); 
+void drawBall(const Ball *ball, short int color); 
 void wait_for_vsync(); 
 void plot_pixel(int x, int y, short int line_color); 
 void readKeyboard(unsigned char *clickedKey);
-void redrawPlayer(playerBall *ball, unsigned char var);
+void redrawPlayer(Ball *ball, unsigned char var);
 void draw_string(int x, int y, char str[]);
 void clear_text();
-void drawRandomBall(const randomBall *ball, short int color); 
+void drawRandomBall(const Ball *ball, short int color); 
 int generateRandomNum(int lower, int upper);
-void redrawRandomBall(randomBall *ball);
+void redrawRandomBall(Ball *ball);
 
-playerBall pBall = {160,120,15, 0,0};
-playerBall previousBall =  {160,120,15, 0,0};
-randomBall rBall = {0,0,0,0,0};
-randomBall previousRandomBall = {0,0,0,0,0};
+Ball playerBall = {160,120,15, 0,0};
+Ball previousBall =  {160,120,15, 0,0};
+Ball randomBall = {0,0,0,0,0};
+Ball previousRandomBall = {0,0,0,0,0};
 	
 int main(void) {
 	
@@ -65,7 +58,7 @@ int main(void) {
 	unsigned char clickedKey = 0; 
 	clear_screen();
 	clear_text();
-	drawBall (&pBall,0x07E0); 
+	drawBall (&playerBall,0x07E0); 
 	status = menu;
 	draw_string(30, 40, "press space to start");
 	
@@ -81,20 +74,35 @@ int main(void) {
 		}else if (status == game){
 		wait_for_vsync();
 		drawBall(&previousBall,0x0000);
+		drawBall(&previousRandomBall,0x0000);	
 			
-		if (count < 10){
-			rBall.x = generateRandomNum(10,310);
-			rBall.y = generateRandomNum(10,230);
-			rBall.radius = generateRandomNum(5,15);
-			rBall.dx = generateRandomNum(1,6);
-			rBall.dy = generateRandomNum(1,6);
-			drawRandomBall(&rBall,0x001F);
-			count += 1;
+		//create random balls
+		Ball randomBallArray[10];
+		if (count ==0){
+			for (int i=0; i<10; i++){			
+				randomBallArray[i].x = generateRandomNum(10,310);
+				randomBallArray[i].y = generateRandomNum(10,230);
+				randomBallArray[i].radius = generateRandomNum(5,15);
+				randomBallArray[i].dx = generateRandomNum(1,6);
+				randomBallArray[i].dy = generateRandomNum(1,6);
+				//randomize colour
+				short color_array [10] = {0xf800,0x001f,0xffe0};
+				randomBallArray[i].color = color_array [rand()%3];
+				drawRandomBall(&randomBallArray[i],randomBallArray[i].color);
+				
+			}		
+			count++;
 		}
+		//redraw player ball
 		readKeyboard(&clickedKey);	
-		redrawPlayer(&pBall, clickedKey);
-		//redrawRandomBall(&rBall);
-		drawBall(&pBall,0x07E0);
+		redrawPlayer(&playerBall, clickedKey);
+		drawBall(&playerBall,0x07E0);
+			
+		//redraw random ball
+		for (int i=0; i<10; i++){
+			redrawRandomBall(&randomBallArray[i]);
+			drawBall(&randomBallArray[i],randomBallArray[i].color);
+		}
 		//drawRandomBall(&rBall,0x001F);
 		}
 			
@@ -106,7 +114,7 @@ int generateRandomNum(int lower, int upper){
 	return num; 
 }
 	
-void drawBall(const playerBall *ball, short int color){
+void drawBall(const Ball *ball, short int color){
 	for (int i = ball->x - ball->radius; i < ball->x + ball->radius; i++) {
 		for (int j = ball->y - ball->radius; j < ball->y + ball->radius; j++) {
 			plot_pixel(i, j, color);
@@ -114,7 +122,7 @@ void drawBall(const playerBall *ball, short int color){
 	}
 }
 
-void drawRandomBall(const randomBall *ball, short int color){
+void drawRandomBall(const Ball *ball, short int color){
 	for (int i = ball->x - ball->radius; i < ball->x + ball->radius; i++) {
 		for (int j = ball->y - ball->radius; j < ball->y + ball->radius; j++) {
 			plot_pixel(i, j, color);
@@ -156,7 +164,7 @@ void readKeyboard(unsigned char *clickedKey){
 		dataVar = *PS2_ptr;
 	}
 }
-void redrawPlayer(playerBall *ball, unsigned char var){
+void redrawPlayer(Ball *ball, unsigned char var){
 	//for arrow key inputs 
 	if (var == 0x72)
 		ball->dy = 3; 
@@ -183,17 +191,19 @@ void redrawPlayer(playerBall *ball, unsigned char var){
 		ball->dy = 0;}
 	previousBall = *ball;
 }
-void redrawRandomBall(randomBall *ball){
-	(ball->y) += (ball->dy); 
-	(ball->x) += (ball->dx);
+
+void redrawRandomBall(Ball *ball){
+	(ball->y) += (ball->dx);
+	(ball->x) += (ball->dy);
 	//border cases for x
 	if (ball->x - ball->radius < 0 || ball->x + ball->radius > 320) {
 		ball->x = ball->x - ball->dx;
-		ball->dx = 0;}
+		ball->dx = -ball->dx;}
 	//border cases for y 
 	if (ball->y - ball->radius < 0 || ball->y + ball->radius > 240) {
 		ball->y = ball->y - ball->dy;
-		ball->dy = 0;}
+		ball->dy = -ball->dy;}
+	previousRandomBall = *ball;
 }
 
 void draw_string(int x, int y, char str[]) {
