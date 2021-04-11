@@ -1,4 +1,4 @@
-#include <stdlib.h>
+ #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 	
@@ -15,8 +15,9 @@ typedef struct Ball{
 
 enum gameStatus{
 	menu,
+	help,
 	game,
-	help
+	gameover
 }; 
 
 enum gameStatus status; 
@@ -32,8 +33,8 @@ void clear_text();
 int generateRandomNum(int lower, int upper);
 void redrawRandomBall(Ball *ball,Ball *previousRandomBall);
 
-Ball playerBall = {160,120,15, 0,0};
-Ball previousBall =  {160,120,15, 0,0};
+Ball playerBall = {160,120,10, 0,0};
+Ball previousBall =  {160,120,10, 0,0};
 Ball randomBall = {0,0,0,0,0};
 Ball previousRandomBall = {0,0,0,0,0};
 	
@@ -65,20 +66,21 @@ int main(void) {
 	Ball randomBallArray[10];
 	Ball previousBallArray[10];
 	while(true){
+		//------------------------------------------------menu------------------------------------------------
 		if (status == menu){
 			readKeyboard(&clickedKey);
 				if (clickedKey == 0x29) {
 					clear_screen();
 					clear_text();
 					status = game;
-				}
-				else if (clickedKey == 0x16){
+				}else if (clickedKey == 0x16){
 					clear_screen();
 					clear_text();
 					status = help; 
 				}
 				
-		}else if (status == help){
+		}//------------------------------------------------help------------------------------------------------
+		else if (status == help){
 			draw_string(30,15, "How to Play/Rules:");
 			draw_string(20,20, "1. Use the arrow keys to control your player");
 			draw_string(10,25, "2. As long as your player is bigger than enemy you can eat them");
@@ -91,7 +93,8 @@ int main(void) {
 					clear_text();
 					status = game;
 			}
-		}else if (status == game){
+		}//------------------------------------------------game------------------------------------------------
+		else if (status == game){
 		wait_for_vsync();
 		
 		//draw previous balls to refresh screen
@@ -101,17 +104,28 @@ int main(void) {
 		//create random balls
 		
 		if (count ==0){
-			for (int i=0; i<10; i++){			
-				randomBallArray[i].x = generateRandomNum(10,310);
-				randomBallArray[i].y = generateRandomNum(10,230);
-				randomBallArray[i].radius = generateRandomNum(5,10);
-				randomBallArray[i].dx = generateRandomNum(-3,3);
-				randomBallArray[i].dy = generateRandomNum(-3,3);
+			for (int i=0; i<5; i++){			
+				randomBallArray[i].x = generateRandomNum(10,100);
+				randomBallArray[i].y = generateRandomNum(10,90);
+				randomBallArray[i].radius = generateRandomNum(5,15);
+				randomBallArray[i].dx = generateRandomNum(-1,1);
+				randomBallArray[i].dy = generateRandomNum(-1,1);
 				//randomize colour
 				short color_array [10] = {0xf800,0x001f,0xffe0};
 				randomBallArray[i].color = color_array [rand()%3];
 				drawBall(&randomBallArray[i],randomBallArray[i].color);				
 			}		
+			for (int i=5; i<10; i++){			
+				randomBallArray[i].x = generateRandomNum(200,310);
+				randomBallArray[i].y = generateRandomNum(140,230);
+				randomBallArray[i].radius = generateRandomNum(5,15);
+				randomBallArray[i].dx = generateRandomNum(-1,1);
+				randomBallArray[i].dy = generateRandomNum(-1,1);
+				//randomize colour
+				short color_array [10] = {0xf800,0x001f,0xffe0};
+				randomBallArray[i].color = color_array [rand()%3];
+				drawBall(&randomBallArray[i],randomBallArray[i].color);				
+			}	
 			
 		}
 		
@@ -137,7 +151,23 @@ int main(void) {
 			redrawRandomBall(&randomBallArray[i], &previousBallArray[i]);
 			drawBall(&randomBallArray[i],randomBallArray[i].color);
 		}
-		//drawRandomBall(&rBall,0x001F);
+		
+		for (int i=0; i<10; i++){
+			if (playerBall.x+playerBall.radius == randomBallArray[i].x-randomBallArray[i].radius 
+			||playerBall.x-playerBall.radius == randomBallArray[i].x+randomBallArray[i].radius
+			||playerBall.y+playerBall.radius == randomBallArray[i].y-randomBallArray[i].radius
+			||playerBall.y-playerBall.radius == randomBallArray[i].y+randomBallArray[i].radius){
+				if (playerBall.radius>=randomBallArray[i].radius){
+					playerBall.radius+=3;
+					randomBallArray[i].radius=0;
+				}else
+					status = gameover;
+			}
+		}
+		//------------------------------------------------gameover------------------------------------------------
+		}else if (status ==gameover){
+			clear_screen();
+				draw_string(30, 40, "gameover");
 		}
 			
 	}
