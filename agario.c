@@ -62,8 +62,9 @@ int main(void) {
 	drawBall (&playerBall,0x07E0); 
 	status = menu;
 	draw_string(30, 40, "press space to start");
+	
 	Ball randomBallArray[10];
-	Ball previousBallArray[10];
+	Ball previousRandomBallArray[10];
 	while(true){
 		if (status == menu){
 			readKeyboard(&clickedKey);
@@ -92,7 +93,7 @@ int main(void) {
 				//randomize colour
 				short color_array [10] = {0xf800,0x001f,0xffe0};
 				randomBallArray[i].color = color_array [rand()%3];
-				drawBall(&randomBallArray[i],randomBallArray[i].color);				
+				drawBall(&randomBallArray[i],randomBallArray[i].color);	
 			}		
 			
 		}
@@ -100,11 +101,11 @@ int main(void) {
 		//draw previous ball
 		if (count !=0){
 			for (int i=0; i<10; i++){
-			drawBall(&previousBallArray[i],0x0000);	
+			drawBall(&previousRandomBallArray[i],0x1111);	
 			}
 		}else if (count ==0){
 			for (int i=0; i<10; i++){
-			drawBall(&randomBallArray[i],0x0000);	
+			drawBall(&randomBallArray[i],0x1111);	
 				count++;
 			}
 		}
@@ -116,7 +117,7 @@ int main(void) {
 			
 		//redraw random ball
 		for (int i=0; i<10; i++){
-			redrawRandomBall(&randomBallArray[i], &previousBallArray[i]);
+			redrawRandomBall(&randomBallArray[i], &previousRandomBallArray[i]);
 			drawBall(&randomBallArray[i],randomBallArray[i].color);
 		}
 		//drawRandomBall(&rBall,0x001F);
@@ -158,12 +159,12 @@ void redrawRandomBall(Ball *ball, Ball *previousRandomBall){
 	(ball->x) += (ball->dy);
 	//border cases for x
 	if (ball->x - ball->radius < 0 || ball->x + ball->radius > 320) {
-		ball->x = ball->x - 2*ball->dx;
-		ball->dx = -1*ball->dx;}
+		ball->x = ball->x - ball->dx;
+		ball->dx = 0;}
 	//border cases for y 
 	if (ball->y - ball->radius < 0 || ball->y + ball->radius > 240) {
-		ball->y = ball->y - 2*ball->dy;
-		ball->dy = -1*ball->dy;}
+		ball->y = ball->y - ball->dy;
+		ball->dy = 0;}
 	
 	*previousRandomBall = *ball;
 }
