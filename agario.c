@@ -1,4 +1,4 @@
- #include <stdlib.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 	
@@ -17,10 +17,19 @@ enum gameStatus{
 	menu,
 	help,
 	game,
-	gameover
+	gameover,
+	paused,
+	difficultySelect
 }; 
 
+enum difficulty{
+	easy,
+	medium,
+	hard
+};
+
 enum gameStatus status; 
+enum difficulty diff; 
 
 void clear_screen();
 void drawBall(const Ball *ball, short int color); 
@@ -62,22 +71,48 @@ int main(void) {
 	
 	drawBall (&playerBall,0x07E0); 
 	status = menu;
-	draw_string(22, 40, "press space to start or 1 for help");
+	diff = easy;
 	Ball randomBallArray[10];
 	Ball previousBallArray[10];
 	while(true){
 		//------------------------------------------------menu------------------------------------------------
 		if (status == menu){
+			draw_string(31, 10, "!!!Arcade Agario!!!");
+			draw_string(22, 40, "press space to start or 1 for help");
 			readKeyboard(&clickedKey);
 				if (clickedKey == 0x29) {
 					clear_screen();
 					clear_text();
-					status = game;
+					status = difficultySelect;
 				}else if (clickedKey == 0x16){
 					clear_screen();
 					clear_text();
 					status = help; 
 				}
+		}//-------------------------------------------difficultty-select----------------------------------------
+		else if (status == difficultySelect){
+			clear_screen(); 
+			draw_string(30, 15, "Select Difficulty");
+			draw_string(20, 20, "Press E for Easy M for Medium or H for Hard");
+			readKeyboard(&clickedKey); 
+			if (clickedKey == 0x24){
+				clear_screen();
+				clear_text();
+				diff = easy;
+				status = game;
+			}
+			else if (clickedKey == 0x3A){
+				clear_screen();
+				clear_text();
+				diff = medium;
+				status = game;
+			}
+			else if (clickedKey == 0x33){
+				clear_screen();
+				clear_text();
+				diff = hard;
+				status = game;
+			}
 				
 		}//------------------------------------------------help------------------------------------------------
 		else if (status == help){
@@ -91,44 +126,97 @@ int main(void) {
 			if (clickedKey == 0x29){
 					clear_screen();
 					clear_text();
-					status = game;
+					status = menu;
 			}
 		}//------------------------------------------------game------------------------------------------------
 		else if (status == game){
-		wait_for_vsync();
+			wait_for_vsync();
+			//check if used wants to pause 
+			//readKeyboard(&clickedKey);
+			//if (clickedKey == 0x76)
+				//status = paused; 
+			//draw previous balls to refresh screen
+			drawBall(&previousBall,0x0000);
 		
-		//draw previous balls to refresh screen
-		drawBall(&previousBall,0x0000);
-			
-		
-		//create random balls
-		
-		if (count ==0){
-			for (int i=0; i<5; i++){			
-				randomBallArray[i].x = generateRandomNum(10,100);
-				randomBallArray[i].y = generateRandomNum(10,90);
-				randomBallArray[i].radius = generateRandomNum(5,15);
-				randomBallArray[i].dx = generateRandomNum(-1,1);
-				randomBallArray[i].dy = generateRandomNum(-1,1);
-				//randomize colour
-				short color_array [10] = {0xf800,0x001f,0xffe0};
-				randomBallArray[i].color = color_array [rand()%3];
-				drawBall(&randomBallArray[i],randomBallArray[i].color);				
-			}		
-			for (int i=5; i<10; i++){			
-				randomBallArray[i].x = generateRandomNum(200,310);
-				randomBallArray[i].y = generateRandomNum(140,230);
-				randomBallArray[i].radius = generateRandomNum(5,15);
-				randomBallArray[i].dx = generateRandomNum(-1,1);
-				randomBallArray[i].dy = generateRandomNum(-1,1);
-				//randomize colour
-				short color_array [10] = {0xf800,0x001f,0xffe0};
-				randomBallArray[i].color = color_array [rand()%3];
-				drawBall(&randomBallArray[i],randomBallArray[i].color);				
-			}	
-			
-		}
-		
+			//create random balls
+			if (diff == medium){
+				if (count ==0){
+					for (int i=0; i<5; i++){			
+						randomBallArray[i].x = generateRandomNum(10,100);
+						randomBallArray[i].y = generateRandomNum(10,90);
+						randomBallArray[i].radius = generateRandomNum(5,20);
+						randomBallArray[i].dx = generateRandomNum(-2,2);
+						randomBallArray[i].dy = generateRandomNum(-2,2);
+						//randomize colour
+						short color_array [10] = {0xf800,0x001f,0xffe0};
+						randomBallArray[i].color = color_array [rand()%3];
+						drawBall(&randomBallArray[i],randomBallArray[i].color);				
+					}		
+					for (int i=5; i<10; i++){			
+						randomBallArray[i].x = generateRandomNum(200,310);
+						randomBallArray[i].y = generateRandomNum(140,230);
+						randomBallArray[i].radius = generateRandomNum(5,20);
+						randomBallArray[i].dx = generateRandomNum(-2,2);
+						randomBallArray[i].dy = generateRandomNum(-2,2);
+						//randomize colour
+						short color_array [10] = {0xf800,0x001f,0xffe0};
+						randomBallArray[i].color = color_array [rand()%3];
+						drawBall(&randomBallArray[i],randomBallArray[i].color);				
+					}
+				}
+			}
+			else if (diff == easy){
+				if (count ==0){
+					for (int i=0; i<5; i++){			
+						randomBallArray[i].x = generateRandomNum(10,100);
+						randomBallArray[i].y = generateRandomNum(10,90);
+						randomBallArray[i].radius = generateRandomNum(5,15);
+						randomBallArray[i].dx = generateRandomNum(-1,1);
+						randomBallArray[i].dy = generateRandomNum(-1,1);
+						//randomize colour
+						short color_array [10] = {0xf800,0x001f,0xffe0};
+						randomBallArray[i].color = color_array [rand()%3];
+						drawBall(&randomBallArray[i],randomBallArray[i].color);				
+					}		
+					for (int i=4; i<10; i++){			
+						randomBallArray[i].x = generateRandomNum(200,310);
+						randomBallArray[i].y = generateRandomNum(140,230);
+						randomBallArray[i].radius = generateRandomNum(5,15);
+						randomBallArray[i].dx = generateRandomNum(-1,1);
+						randomBallArray[i].dy = generateRandomNum(-1,1);
+						//randomize colour
+						short color_array [10] = {0xf800,0x001f,0xffe0};
+						randomBallArray[i].color = color_array [rand()%3];
+						drawBall(&randomBallArray[i],randomBallArray[i].color);				
+					}
+				}
+			}
+			else if (diff == hard){
+				if (count ==0){
+					for (int i=0; i<5; i++){			
+						randomBallArray[i].x = generateRandomNum(10,100);
+						randomBallArray[i].y = generateRandomNum(10,90);
+						randomBallArray[i].radius = generateRandomNum(5,25);
+						randomBallArray[i].dx = generateRandomNum(-3,3);
+						randomBallArray[i].dy = generateRandomNum(-3,3);
+						//randomize colour
+						short color_array [10] = {0xf800,0x001f,0xffe0};
+						randomBallArray[i].color = color_array [rand()%3];
+						drawBall(&randomBallArray[i],randomBallArray[i].color);				
+					}		
+					for (int i=5; i<10; i++){			
+						randomBallArray[i].x = generateRandomNum(200,310);
+						randomBallArray[i].y = generateRandomNum(140,230);
+						randomBallArray[i].radius = generateRandomNum(5,25);
+						randomBallArray[i].dx = generateRandomNum(-3,3);
+						randomBallArray[i].dy = generateRandomNum(-3,3);
+						//randomize colour
+						short color_array [10] = {0xf800,0x001f,0xffe0};
+						randomBallArray[i].color = color_array [rand()%3];
+						drawBall(&randomBallArray[i],randomBallArray[i].color);				
+					}
+				}
+			}
 		//draw previous ball
 		if (count !=0){
 			for (int i=0; i<10; i++){
@@ -170,12 +258,18 @@ int main(void) {
 					randomBallArray[i].radius=0;
 				}else
 					status = gameover;
+				}
 			}
 		}
 		//------------------------------------------------gameover------------------------------------------------
-		}else if (status ==gameover){
+		else if (status == gameover){
 			clear_screen();
-				draw_string(30, 40, "gameover");
+			draw_string(35, 30, "Gameover");
+			draw_string(30, 25, "Press space to restart");
+				
+			readKeyboard(&clickedKey);
+			if (clickedKey == 0x29)
+				status = menu; 
 		}
 			
 	}
