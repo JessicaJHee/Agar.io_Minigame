@@ -1,5 +1,4 @@
-  
-#include <stdlib.h>
+ #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 	
@@ -62,9 +61,8 @@ int main(void) {
 	drawBall (&playerBall,0x07E0); 
 	status = menu;
 	draw_string(30, 40, "press space to start");
-	
 	Ball randomBallArray[10];
-	Ball previousRandomBallArray[10];
+	Ball previousBallArray[10];
 	while(true){
 		if (status == menu){
 			readKeyboard(&clickedKey);
@@ -93,7 +91,7 @@ int main(void) {
 				//randomize colour
 				short color_array [10] = {0xf800,0x001f,0xffe0};
 				randomBallArray[i].color = color_array [rand()%3];
-				drawBall(&randomBallArray[i],randomBallArray[i].color);	
+				drawBall(&randomBallArray[i],randomBallArray[i].color);				
 			}		
 			
 		}
@@ -101,11 +99,11 @@ int main(void) {
 		//draw previous ball
 		if (count !=0){
 			for (int i=0; i<10; i++){
-			drawBall(&previousRandomBallArray[i],0x1111);	
+			drawBall(&previousBallArray[i],0x0000);	
 			}
 		}else if (count ==0){
 			for (int i=0; i<10; i++){
-			drawBall(&randomBallArray[i],0x1111);	
+			drawBall(&randomBallArray[i],0x0000);	
 				count++;
 			}
 		}
@@ -117,7 +115,7 @@ int main(void) {
 			
 		//redraw random ball
 		for (int i=0; i<10; i++){
-			redrawRandomBall(&randomBallArray[i], &previousRandomBallArray[i]);
+			redrawRandomBall(&randomBallArray[i], &previousBallArray[i]);
 			drawBall(&randomBallArray[i],randomBallArray[i].color);
 		}
 		//drawRandomBall(&rBall,0x001F);
@@ -155,8 +153,8 @@ void redrawPlayer(Ball *ball, unsigned char var){
 }
 
 void redrawRandomBall(Ball *ball, Ball *previousRandomBall){
-	(ball->y) += (ball->dx);
-	(ball->x) += (ball->dy);
+	(ball->y) += (ball->dy);
+	(ball->x) += (ball->dx);
 	//border cases for x
 	if (ball->x - ball->radius < 0 || ball->x + ball->radius > 320) {
 		ball->x = ball->x - ball->dx;
