@@ -1,4 +1,4 @@
- #include <stdlib.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 	
@@ -15,7 +15,8 @@ typedef struct Ball{
 
 enum gameStatus{
 	menu,
-	game
+	game,
+	help
 }; 
 
 enum gameStatus status; 
@@ -60,7 +61,7 @@ int main(void) {
 	
 	drawBall (&playerBall,0x07E0); 
 	status = menu;
-	draw_string(30, 40, "press space to start");
+	draw_string(22, 40, "press space to start or 1 for help");
 	Ball randomBallArray[10];
 	Ball previousBallArray[10];
 	while(true){
@@ -71,7 +72,25 @@ int main(void) {
 					clear_text();
 					status = game;
 				}
+				else if (clickedKey == 0x16){
+					clear_screen();
+					clear_text();
+					status = help; 
+				}
 				
+		}else if (status == help){
+			draw_string(30,15, "How to Play/Rules:");
+			draw_string(20,20, "1. Use the arrow keys to control your player");
+			draw_string(10,25, "2. As long as your player is bigger than enemy you can eat them");
+			draw_string(10,30, "3. if enemy is bigger than you and you hit them you will be eaten");
+			draw_string(24,35, "----->Press Space to start<-----");
+			
+			readKeyboard(&clickedKey);
+			if (clickedKey == 0x29){
+					clear_screen();
+					clear_text();
+					status = game;
+			}
 		}else if (status == game){
 		wait_for_vsync();
 		
@@ -158,11 +177,11 @@ void redrawRandomBall(Ball *ball, Ball *previousRandomBall){
 	//border cases for x
 	if (ball->x - ball->radius < 0 || ball->x + ball->radius > 320) {
 		ball->x = ball->x - ball->dx;
-		ball->dx = 0;}
+		ball->dx = -1*ball->dx;}
 	//border cases for y 
 	if (ball->y - ball->radius < 0 || ball->y + ball->radius > 240) {
 		ball->y = ball->y - ball->dy;
-		ball->dy = 0;}
+		ball->dy = -1*ball->dy;}
 	
 	*previousRandomBall = *ball;
 }
