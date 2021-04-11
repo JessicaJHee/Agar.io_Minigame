@@ -1,3 +1,4 @@
+  
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -156,20 +157,13 @@ void redrawRandomBall(Ball *ball, Ball *previousRandomBall){
 	(ball->y) += (ball->dx);
 	(ball->x) += (ball->dy);
 	//border cases for x
-	if (ball->x - ball->radius < 0) {
-		ball->x = ball->x - ball->dx;
-		ball->dx = 5;}
-	else if (ball->x + ball->radius > 320) {
-		ball->x = ball->x - ball->dx;
-		ball->dx = -5;}
+	if (ball->x - ball->radius < 0 || ball->x + ball->radius > 320) {
+		ball->x = ball->x - 2*ball->dx;
+		ball->dx = -1*ball->dx;}
 	//border cases for y 
-	if (ball->y - ball->radius < 0) {
-		ball->y = ball->y - ball->dy;
-		ball->dy = 5;
-			drawBall(&playerBall,0x1111);}
-	else if (ball->y + ball->radius > 240) {
-		ball->y = ball->y - ball->dy;
-		ball->dy = -5;}
+	if (ball->y - ball->radius < 0 || ball->y + ball->radius > 240) {
+		ball->y = ball->y - 2*ball->dy;
+		ball->dy = -1*ball->dy;}
 	
 	*previousRandomBall = *ball;
 }
