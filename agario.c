@@ -153,10 +153,18 @@ int main(void) {
 		}
 		
 		for (int i=0; i<10; i++){
-			if (playerBall.x+playerBall.radius == randomBallArray[i].x-randomBallArray[i].radius 
-			||playerBall.x-playerBall.radius == randomBallArray[i].x+randomBallArray[i].radius
-			||playerBall.y+playerBall.radius == randomBallArray[i].y-randomBallArray[i].radius
-			||playerBall.y-playerBall.radius == randomBallArray[i].y+randomBallArray[i].radius){
+			if (((playerBall.x+playerBall.radius == randomBallArray[i].x-randomBallArray[i].radius )
+				&& (randomBallArray[i].y+randomBallArray[i].radius >=playerBall.y+playerBall.radius+2*randomBallArray[i].radius && 
+					randomBallArray[i].y+randomBallArray[i].radius <=playerBall.y-playerBall.radius))
+			||((playerBall.x-playerBall.radius == randomBallArray[i].x+randomBallArray[i].radius )
+				&& (randomBallArray[i].y+randomBallArray[i].radius >=playerBall.y+playerBall.radius+2*randomBallArray[i].radius && 
+					randomBallArray[i].y+randomBallArray[i].radius <=playerBall.y-playerBall.radius))
+			||((playerBall.y+playerBall.radius == randomBallArray[i].y-randomBallArray[i].radius )
+				&& (randomBallArray[i].x+randomBallArray[i].radius >=playerBall.x-playerBall.radius && 
+					randomBallArray[i].x+randomBallArray[i].radius <=playerBall.x+playerBall.radius+2*randomBallArray[i].radius))
+			||((playerBall.y-playerBall.radius == randomBallArray[i].y+randomBallArray[i].radius)
+				&& (randomBallArray[i].x+randomBallArray[i].radius >=playerBall.x-playerBall.radius && 
+					randomBallArray[i].x+randomBallArray[i].radius <=playerBall.x+playerBall.radius+2*randomBallArray[i].radius))){
 				if (playerBall.radius>=randomBallArray[i].radius){
 					playerBall.radius+=3;
 					randomBallArray[i].radius=0;
