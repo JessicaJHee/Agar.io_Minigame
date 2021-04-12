@@ -1,6 +1,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+	#include <stdio.h>
+#include <math.h>
+
 	
 volatile int pixel_buffer_start; // global variable 
 
@@ -19,7 +22,8 @@ enum gameStatus{
 	game,
 	gameover,
 	paused,
-	difficultySelect
+	difficultySelect,
+	gamewon
 }; 
 
 enum difficulty{
@@ -41,6 +45,7 @@ void draw_string(int x, int y, char str[]);
 void clear_text();
 int generateRandomNum(int lower, int upper);
 void redrawRandomBall(Ball *ball,Ball *previousRandomBall);
+void resetPlayerBall (Ball *ball);
 
 Ball playerBall = {160,120,10, 0,0};
 Ball previousBall =  {160,120,10, 0,0};
@@ -53,7 +58,7 @@ int main(void) {
 	pixel_buffer_start = *pixel_ctrl_ptr;
 	
 	int count = 0;
-	
+	int consumedNum = 0;
 	 /* set front pixel buffer to start of FPGA On-chip memory */
    // *(pixel_ctrl_ptr + 1) = 0xC0000000;
     /* now, swap the front/back buffers, to set the front buffer location 
@@ -69,16 +74,19 @@ int main(void) {
 	clear_screen();
 	clear_text();
 	
-	drawBall (&playerBall,0x07E0); 
+
 	status = menu;
 	diff = easy;
 	Ball randomBallArray[10];
 	Ball previousBallArray[10];
+	drawBall (&playerBall,0x07E0); 
 	while(true){
 		//------------------------------------------------menu------------------------------------------------
 		if (status == menu){
 			draw_string(31, 10, "!!!Arcade Agario!!!");
 			draw_string(22, 40, "press space to start or 1 for help");
+
+			resetPlayerBall(&playerBall);
 			readKeyboard(&clickedKey);
 				if (clickedKey == 0x29) {
 					clear_screen();
@@ -130,6 +138,7 @@ int main(void) {
 			}
 		}//------------------------------------------------game------------------------------------------------
 		else if (status == game){
+			if (count==0)draw_string(1, 1, "Balls Consumed: 0");
 			wait_for_vsync();
 			//check if used wants to pause 
 			//readKeyboard(&clickedKey);
@@ -240,32 +249,53 @@ int main(void) {
 			drawBall(&randomBallArray[i],randomBallArray[i].color);
 		}
 		
-		for (int i=0; i<10; i++){
-			if (((playerBall.x+playerBall.radius == randomBallArray[i].x-randomBallArray[i].radius )
-				&& (randomBallArray[i].y+randomBallArray[i].radius >=playerBall.y+playerBall.radius+2*randomBallArray[i].radius && 
-					randomBallArray[i].y+randomBallArray[i].radius <=playerBall.y-playerBall.radius))
-			||((playerBall.x-playerBall.radius == randomBallArray[i].x+randomBallArray[i].radius )
-				&& (randomBallArray[i].y+randomBallArray[i].radius >=playerBall.y+playerBall.radius+2*randomBallArray[i].radius && 
-					randomBallArray[i].y+randomBallArray[i].radius <=playerBall.y-playerBall.radius))
-			||((playerBall.y+playerBall.radius == randomBallArray[i].y-randomBallArray[i].radius )
-				&& (randomBallArray[i].x+randomBallArray[i].radius >=playerBall.x-playerBall.radius && 
-					randomBallArray[i].x+randomBallArray[i].radius <=playerBall.x+playerBall.radius+2*randomBallArray[i].radius))
-			||((playerBall.y-playerBall.radius == randomBallArray[i].y+randomBallArray[i].radius)
-				&& (randomBallArray[i].x+randomBallArray[i].radius >=playerBall.x-playerBall.radius && 
-					randomBallArray[i].x+randomBallArray[i].radius <=playerBall.x+playerBall.radius+2*randomBallArray[i].radius))){
-				if (playerBall.radius>=randomBallArray[i].radius){
-					playerBall.radius+=3;
+		
+		int player_x1, player_x2, player_y1, player_y2;
+		int random_x1, random_x2, random_y1, random_y2;
+			
+
+		char score[] = "Balls Consumed: ";
+		char num_str[10];
+			for (int i=0; i<10; i++){
+				if (consumedNum>=10)status = gamewon;
+			player_x1 = playerBall.x-playerBall.radius;
+			player_x2 = playerBall.x+playerBall.radius;
+			player_y1 = playerBall.y-playerBall.radius;
+			player_y2 = playerBall.y+playerBall.radius;
+			random_x1 = randomBallArray[i].x-randomBallArray[i].radius;
+			random_x2 = randomBallArray[i].x+randomBallArray[i].radius;
+			random_y1 = randomBallArray[i].y-randomBallArray[i].radius;
+			random_y2 = randomBallArray[i].y+randomBallArray[i].radius;
+			if (player_x1 < random_x2 && player_x2 > random_x1 && player_y1 < random_y2 && player_y2 > random_y1){
+				if (playerBall.radius>=randomBallArray[i].radius){	
+					clear_text();
+					consumedNum++;
+					playerBall.radius+=1;
 					randomBallArray[i].radius=0;
-				}else
-					status = gameover;
-				}
+					randomBallArray[i].x=0;
+					randomBallArray[i].y=0;
+					randomBallArray[i].dx=0;
+					randomBallArray[i].dy=0;
+					sprintf(num_str, "%d", consumedNum);
+					strcat(score, num_str);
+					draw_string(1, 1, score);
+				}else status = gameover;
 			}
+		
 		}
 		//------------------------------------------------gameover------------------------------------------------
-		else if (status == gameover){
+		}else if (status == gameover){
 			clear_screen();
 			draw_string(35, 30, "Gameover");
 			draw_string(30, 25, "Press space to restart");
+				
+			readKeyboard(&clickedKey);
+			if (clickedKey == 0x29)
+				status = menu; 
+		}else if (status ==gamewon){
+			clear_screen();
+			draw_string(25, 25, "All Balls Consumed! Gamewon!");
+			draw_string(30, 30, "Press space to restart");
 				
 			readKeyboard(&clickedKey);
 			if (clickedKey == 0x29)
@@ -325,6 +355,15 @@ void drawBall(const Ball *ball, short int color){
 		}
 	}
 }
+
+void resetPlayerBall (Ball *ball){
+	ball->radius=10;
+	ball->x=160;
+	ball->y=120;
+	ball->dx=0;
+	ball->dy=0;
+}
+
 //------------------------------helper functions-------------------------------------------------
 int generateRandomNum(int lower, int upper){
 	int num = (rand() % (upper - lower + 1)) + lower;
