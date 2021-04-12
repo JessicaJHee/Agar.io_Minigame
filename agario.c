@@ -57,23 +57,13 @@ int main(void) {
     volatile int * pixel_ctrl_ptr = (int *)0xFF203020;
 	pixel_buffer_start = *pixel_ctrl_ptr;
 	
-	int count = 0;
+	int count=0;
 	int consumedNum = 0;
-	 /* set front pixel buffer to start of FPGA On-chip memory */
-   // *(pixel_ctrl_ptr + 1) = 0xC0000000;
-    /* now, swap the front/back buffers, to set the front buffer location 
-    wait_for_vsync();
-    pixel_buffer_start = *pixel_ctrl_ptr;
-	//clear_screen();
-	//drawBall (&pBall,0x07E0);
-	
-    *(pixel_ctrl_ptr + 1) = 0xC8000000;
-    pixel_buffer_start = *(pixel_ctrl_ptr + 1); // we draw on the back buffer*/
-	
+
 	unsigned char clickedKey = 0; 
 	clear_screen();
 	clear_text();
-	
+
 
 	status = menu;
 	diff = easy;
@@ -83,6 +73,10 @@ int main(void) {
 	while(true){
 		//------------------------------------------------menu------------------------------------------------
 		if (status == menu){
+			clear_screen();
+			clear_text();
+			count = 0;
+			
 			draw_string(31, 10, "!!!Arcade Agario!!!");
 			draw_string(22, 40, "press space to start or 1 for help");
 
@@ -140,10 +134,6 @@ int main(void) {
 		else if (status == game){
 			if (count==0)draw_string(1, 1, "Balls Consumed: 0");
 			wait_for_vsync();
-			//check if used wants to pause 
-			//readKeyboard(&clickedKey);
-			//if (clickedKey == 0x76)
-				//status = paused; 
 			//draw previous balls to refresh screen
 			drawBall(&previousBall,0x0000);
 		
@@ -287,19 +277,23 @@ int main(void) {
 		}else if (status == gameover){
 			clear_screen();
 			draw_string(35, 30, "Gameover");
-			draw_string(30, 25, "Press space to restart");
+			draw_string(30, 25, "Press enter to restart");
 				
 			readKeyboard(&clickedKey);
-			if (clickedKey == 0x29)
+			if (clickedKey == 0x5A){
 				status = menu; 
+				count =0;
+			}
 		}else if (status ==gamewon){
 			clear_screen();
 			draw_string(25, 25, "All Balls Consumed! Gamewon!");
-			draw_string(30, 30, "Press space to restart");
+			draw_string(30, 30, "Press enter to restart");
 				
 			readKeyboard(&clickedKey);
-			if (clickedKey == 0x29)
+			if (clickedKey == 0x5A){
 				status = menu; 
+				count =0;
+			}
 		}
 			
 	}
@@ -348,6 +342,8 @@ void redrawRandomBall(Ball *ball, Ball *previousRandomBall){
 	*previousRandomBall = *ball;
 }
 
+
+//------------------------------helper functions-------------------------------------------------
 void drawBall(const Ball *ball, short int color){
 	for (int i = ball->x - ball->radius; i < ball->x + ball->radius; i++) {
 		for (int j = ball->y - ball->radius; j < ball->y + ball->radius; j++) {
@@ -364,7 +360,7 @@ void resetPlayerBall (Ball *ball){
 	ball->dy=0;
 }
 
-//------------------------------helper functions-------------------------------------------------
+
 int generateRandomNum(int lower, int upper){
 	int num = (rand() % (upper - lower + 1)) + lower;
 	return num; 
